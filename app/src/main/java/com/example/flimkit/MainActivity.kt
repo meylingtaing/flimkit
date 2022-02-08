@@ -157,30 +157,53 @@ class MainActivity : AppCompatActivity() {
         val client = AmazonS3Client(credentials, Region.getRegion("us-east-1"))
         client.endpoint = getString(R.string.endpoint)
 
+        val bucket = getString(R.string.bucket)
+        val file = convertResourceToFile()
+        val key = "food/${year}/${month}/${year}-${month}-${day}_${input}.jpg"
+
+        // Assume the file exists to begin with. We'll look it up, and modify this if the file
+        // isn't there.
+        //
+        // This seems kind of backwards to catch an exception and then proceed, whereas not
+        // hitting an exception means we stop, but that's what I was able to get working. Maybe
+        // revisit this logic later
+        var fileExists = true
+
         try {
-            val bucket = getString(R.string.bucket)
-            val file = convertResourceToFile()
-            val key = "food/${year}/${month}/${year}-${month}-${day}_${input}.jpg"
-
-            // I guess this returns something, but I'll get a warning if I try to save it to a
-            // variable. Maybe look more into that later.
-            client.putObject(bucket, key, file)
-            client.setObjectAcl(bucket, key, CannedAccessControlList.PublicRead)
-
-            runOnUiThread {
-                run {
-                    Toast.makeText(this, "Saved to $key", Toast.LENGTH_SHORT).show()
-                }
-            }
+            client.getObjectMetadata(bucket, key)
+            show("File already exists at $key")
         }
         catch (e: AmazonClientException) {
-            debug("client exception: $e")
+            if (e.toString().contains("Not Found")) {
+                fileExists = false
+            }
+            else {
+                debug("client exception: $e")
+            }
         }
-        catch (e: AmazonServiceException) {
-            debug("service exception: $e")
-        }
-        catch (e: Exception) {
-            debug("some other exception: $e")
+
+        if (!fileExists) {
+            try {
+                // I guess this returns something, but I'll get a warning if I try to save it to a
+                // variable. Maybe look more into that later.
+                client.putObject(bucket, key, file)
+                client.setObjectAcl(bucket, key, CannedAccessControlList.PublicRead)
+
+                runOnUiThread {
+                    run {
+                        Toast.makeText(this, "Saved to $key", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            catch (e: AmazonClientException) {
+                debug("client exception: $e")
+            }
+            catch (e: AmazonServiceException) {
+                debug("service exception: $e")
+            }
+            catch (e: Exception) {
+                debug("some other exception: $e")
+            }
         }
 
     }
