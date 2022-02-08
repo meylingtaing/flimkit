@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
                     // Create a smaller version of the picture?
                     val desiredWidth = 1024
                     val desiredHeight:Int = (bitmap.height * (desiredWidth.toDouble() / bitmap.width)).toInt()
-                    Log.d("flailing", "Desired height is $desiredHeight")
+                    debug("Desired height is $desiredHeight")
 
                     newBitmap =
                         Bitmap.createScaledBitmap(bitmap, desiredWidth, desiredHeight, true)
@@ -174,13 +174,13 @@ class MainActivity : AppCompatActivity() {
             }
         }
         catch (e: AmazonClientException) {
-            Log.d("flailing", "client exception: $e")
+            debug("client exception: $e")
         }
         catch (e: AmazonServiceException) {
-            Log.d("flailing", "service exception: $e")
+            debug("service exception: $e")
         }
         catch (e: Exception) {
-            Log.d("flailing", "some other exception: $e")
+            debug("some other exception: $e")
         }
 
     }
@@ -195,7 +195,7 @@ class MainActivity : AppCompatActivity() {
     private fun convertResourceToFile(): File {
         val exampleBitmap = newBitmap
 
-        Log.d("flailing", "${this.filesDir}")
+        debug("${this.filesDir}")
 
         val exampleFile = File(this.filesDir, "tempfile.jpg")
         exampleFile.createNewFile()
@@ -228,7 +228,7 @@ class MainActivity : AppCompatActivity() {
             return ""
         }
 
-        Log.d("flailing","I guess there's a bitmap?")
+        debug("I guess there's a bitmap?")
 
         // Check for something in the text input
         val input = binding.filenameInputText.text.toString()
