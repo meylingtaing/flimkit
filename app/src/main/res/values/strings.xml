@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FliMKit</string>
+    <string name="cdn_url">https://cdn.meylingtaing.com/</string>
 </resources>

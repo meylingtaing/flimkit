@@ -1,8 +1,7 @@
 package com.example.flimkit
 
 import android.app.Activity
-import android.content.ContentValues
-import android.content.Intent
+import android.content.*
 import android.graphics.Bitmap
 import android.media.ExifInterface
 import android.net.Uri
@@ -189,11 +188,19 @@ class MainActivity : AppCompatActivity() {
                 client.putObject(bucket, key, file)
                 client.setObjectAcl(bucket, key, CannedAccessControlList.PublicRead)
 
+                val newImageUrl = getString(R.string.cdn_url) + key
+
                 runOnUiThread {
                     run {
-                        Toast.makeText(this, "Saved to $key", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Saved to $newImageUrl", Toast.LENGTH_LONG).show()
                     }
                 }
+
+                // Right now this is being copied to the clipboard as plain text (and not as a URL)
+                // but I can probably fancy this up a little so the phone recognizes it as a URL
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip: ClipData = ClipData.newPlainText("a url", newImageUrl)
+                clipboard.setPrimaryClip(clip)
             }
             catch (e: AmazonClientException) {
                 debug("client exception: $e")
