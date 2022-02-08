@@ -40,6 +40,10 @@ class MainActivity : AppCompatActivity() {
 
     private var newBitmap: Bitmap? = null
 
+    /*
+        onCreate
+        Stuff that happens when the app starts
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -56,6 +60,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /*
+        show(message)
+        Briefly displays the given message at the bottom of the screen
+     */
     private fun show(message: String) {
         debug("In show")
         try {
@@ -70,6 +78,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /*
+        openGallery()
+        Allows the user to select an image from their phone
+     */
     private fun openGallery() {
         val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
             type = "image/*"
@@ -77,6 +89,10 @@ class MainActivity : AppCompatActivity() {
         startActivityForResult(intent, REQUEST_IMAGE_GET)
     }
 
+    /*
+        renderImage(bitmap)
+        Displays the given bitmap on the screen
+     */
     private fun renderImage(bitmap: Bitmap?) {
         if (bitmap == null) {
             show("renderImage called without bitmap")
@@ -86,6 +102,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /*
+        onActivityResult
+        Handles what happens after the user selects an image
+     */
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -120,7 +140,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Make this a "suspend" function?
+    /*
+        saveImageToServer()
+        Uploads the selected image to the digital ocean spaces server
+     */
     private fun saveImageToServer() {
         val input = ensureBitmap()
         if (input == "") { return }
@@ -160,8 +183,12 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    /* Copy pasted and modified from
-    https://github.com/br3nt0n/Digital-Ocean-Spaces-Android-Example/blob/master/app/src/main/java/thecloudhub/com/digitaloceanspacesexample/SpacesFileRepository.kt
+    /*
+        convertResourceToFile()
+        Saves the selected image bitmap into a temporary file
+
+        Copy pasted and modified from
+        https://github.com/br3nt0n/Digital-Ocean-Spaces-Android-Example/blob/master/app/src/main/java/thecloudhub/com/digitaloceanspacesexample/SpacesFileRepository.kt
      */
     private fun convertResourceToFile(): File {
         val exampleBitmap = newBitmap
@@ -183,6 +210,12 @@ class MainActivity : AppCompatActivity() {
         return exampleFile
     }
 
+    /*
+        ensureBitmap()
+        Checks to make sure that both an image is selected and text is in the input
+        Returns the text input if both of these conditions is true, and returns an empty string
+        if not
+     */
     private fun ensureBitmap(): String {
         debug("In ensureBitmap")
 
@@ -205,6 +238,10 @@ class MainActivity : AppCompatActivity() {
         return input
     }
 
+    /*
+        saveImage()
+        Copies the selected image to a new file on the phone
+     */
     private fun saveImage() {
 
         val input = ensureBitmap()
@@ -225,6 +262,10 @@ class MainActivity : AppCompatActivity() {
         show("Saved an image: ${uri.toString()}")
     }
 
+    /*
+        saveImageToStream()
+        A helper for saveImage
+     */
     private fun saveImageToStream(bitmap: Bitmap, outputStream: OutputStream?) {
         if (outputStream != null) {
             try {
@@ -236,6 +277,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /*
+        debug(message)
+        Logs the given message under the "flailing" tag
+     */
     private fun debug(message: String) {
         Log.d("flailing", message)
     }
