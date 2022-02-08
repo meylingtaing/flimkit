@@ -67,14 +67,14 @@ class MainActivity : AppCompatActivity() {
     private fun show(message: String) {
         debug("In show")
         try {
-            runOnUiThread(Runnable() {
-                run() {
+            runOnUiThread {
+                run {
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                 }
-            })
+            }
         }
         catch (e: Exception) {
-            debug("Failed to show toast message: ${e.toString()}")
+            debug("Failed to show toast message: $e")
         }
     }
 
@@ -161,24 +161,26 @@ class MainActivity : AppCompatActivity() {
             val bucket = getString(R.string.bucket)
             val file = convertResourceToFile()
             val key = "food/${year}/${month}/${year}-${month}-${day}_${input}.jpg"
-            val result = client.putObject(bucket, key, file)
 
+            // I guess this returns something, but I'll get a warning if I try to save it to a
+            // variable. Maybe look more into that later.
+            client.putObject(bucket, key, file)
             client.setObjectAcl(bucket, key, CannedAccessControlList.PublicRead)
 
-            runOnUiThread(Runnable() {
-                run() {
+            runOnUiThread {
+                run {
                     Toast.makeText(this, "Saved to $key", Toast.LENGTH_SHORT).show()
                 }
-            })
+            }
         }
         catch (e: AmazonClientException) {
-            Log.d("flailing", "client exception: ${e.toString()}")
+            Log.d("flailing", "client exception: $e")
         }
         catch (e: AmazonServiceException) {
-            Log.d("flailing", "service exception: ${e.toString()}")
+            Log.d("flailing", "service exception: $e")
         }
         catch (e: Exception) {
-            Log.d("flailing", "some other exception: ${e.toString()}")
+            Log.d("flailing", "some other exception: $e")
         }
 
     }
