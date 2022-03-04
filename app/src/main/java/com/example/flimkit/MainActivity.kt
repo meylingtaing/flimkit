@@ -1,6 +1,7 @@
 package com.example.flimkit
 
 import android.app.Activity
+import android.app.DatePickerDialog
 import android.content.*
 import android.graphics.Bitmap
 import android.media.ExifInterface
@@ -55,8 +56,8 @@ class MainActivity : AppCompatActivity() {
             GlobalScope.launch {
                 saveImageToServer()
             }
-
         }
+        binding.imageDate.setOnClickListener { chooseDate() }
     }
 
     /*
@@ -120,9 +121,12 @@ class MainActivity : AppCompatActivity() {
                             if (stream != null) {
                                 val exif = ExifInterface(stream)
                                 val date = exif.getAttribute(ExifInterface.TAG_DATETIME)
-                                year = date?.substring(0, 4)
-                                month = date?.substring(5, 7)
-                                day = date?.substring(8, 10)
+                                if (date != null) {
+                                    year = date.substring(0, 4)
+                                    month = date.substring(5, 7)
+                                    day = date.substring(8, 10)
+                                    binding.imageDate.text = getString(R.string.image_taken_date, year, month, day)
+                                }
                             }
                     }
 
@@ -258,12 +262,16 @@ class MainActivity : AppCompatActivity() {
             return ""
         }
 
-        debug("I guess there's a bitmap?")
-
         // Check for something in the text input
         val input = binding.filenameInputText.text.toString()
         if (input == "") {
             show("No filename given")
+            return ""
+        }
+
+        // Make sure we have a date
+        if (year == null || month == null || day == null) {
+            show("No date chosen")
             return ""
         }
 
@@ -307,6 +315,22 @@ class MainActivity : AppCompatActivity() {
                 e.printStackTrace()
             }
         }
+    }
+
+    /*
+        chooseDate()
+        Makes a datepicker appear, so you can manually set a date for the image
+     */
+    private fun chooseDate() {
+        val datePicker = DatePickerDialog(this)
+        datePicker.setOnDateSetListener { view, datePickedYear, datePickedMonth, datePickedDay ->
+            year  = String.format("%d", datePickedYear)
+            month = String.format("%02d", datePickedMonth+1) // What the heck, this is 0 based?!
+            day   = String.format("%02d", datePickedDay)
+
+            binding.imageDate.text = getString(R.string.image_taken_date, year, month, day)
+        }
+        datePicker.show()
     }
 
     /*

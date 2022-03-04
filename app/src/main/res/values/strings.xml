@@ -1,7 +1,9 @@
 <resources>
     <string name="app_name">FliMKit</string>
     <string name="cdn_url">https://cdn.meylingtaing.com/</string>
+    <string name="default_image_date_text">date not found</string>
     <string name="image_content_description">Click this to choose an image</string>
     <string name="filename_input_hint">Filename</string>
     <string name="save_button_text">Save Photo</string>
+    <string name="image_taken_date">%s-%s-%s</string>
 </resources>
