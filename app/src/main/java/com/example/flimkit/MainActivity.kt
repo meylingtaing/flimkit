@@ -65,7 +65,6 @@ class MainActivity : AppCompatActivity() {
         Briefly displays the given message at the bottom of the screen
      */
     private fun show(message: String) {
-        debug("In show")
         try {
             runOnUiThread {
                 run {
@@ -133,7 +132,6 @@ class MainActivity : AppCompatActivity() {
                     // Create a smaller version of the picture?
                     val desiredWidth = 1024
                     val desiredHeight:Int = (bitmap.height * (desiredWidth.toDouble() / bitmap.width)).toInt()
-                    debug("Desired height is $desiredHeight")
 
                     newBitmap =
                         Bitmap.createScaledBitmap(bitmap, desiredWidth, desiredHeight, true)
@@ -234,8 +232,6 @@ class MainActivity : AppCompatActivity() {
     private fun convertResourceToFile(): File {
         val exampleBitmap = newBitmap
 
-        debug("${this.filesDir}")
-
         val exampleFile = File(this.filesDir, "tempfile.jpg")
         exampleFile.createNewFile()
 
@@ -258,11 +254,9 @@ class MainActivity : AppCompatActivity() {
         if not
      */
     private fun ensureBitmap(): String {
-        debug("In ensureBitmap")
 
         // Make sure a photo has been chosen
         if (newBitmap == null) {
-            debug("No photo chosen")
             show("No photo chosen")
             return ""
         }
