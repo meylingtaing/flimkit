@@ -1,6 +1,7 @@
 package com.example.flimkit
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.*
 import android.graphics.Bitmap
@@ -52,7 +53,6 @@ class MainActivity : AppCompatActivity() {
 
         binding.viewImage.setOnClickListener { openGallery() }
         binding.btnSave.setOnClickListener {
-            //saveImage()
             GlobalScope.launch {
                 saveImageToServer()
             }
@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
         try {
             runOnUiThread {
                 run {
-                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, message, Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -164,59 +164,64 @@ class MainActivity : AppCompatActivity() {
         val file = convertResourceToFile()
         val key = "food/${year}/${month}/${year}-${month}-${day}_${input}.jpg"
 
-        // Assume the file exists to begin with. We'll look it up, and modify this if the file
-        // isn't there.
+        // Before saving the file, we need to check and see if it already exists, and if it does,
+        // then we should prompt to user to make sure overwriting it is okay
         //
         // This seems kind of backwards to catch an exception and then proceed, whereas not
         // hitting an exception means we stop, but that's what I was able to get working. Maybe
         // revisit this logic later
-        var fileExists = true
 
         try {
             client.getObjectMetadata(bucket, key)
-            show("File already exists at $key")
+            runOnUiThread {
+                run {
+                    val builder = AlertDialog.Builder(this)
+                    builder.setMessage("File already exists at $key. Would you like to overwrite?")
+                        .setPositiveButton("Yes") { _, _ ->
+                            GlobalScope.launch { actuallySaveFile(client, bucket, key, file) }
+                        }
+                        .setNegativeButton("No") { _, _ -> }
+                    builder.show()
+                }
+            }
+
         }
         catch (e: AmazonClientException) {
             if (e.toString().contains("Not Found")) {
-                fileExists = false
+                actuallySaveFile(client, bucket, key, file)
             }
             else {
                 debug("client exception: $e")
             }
         }
-
-        if (!fileExists) {
-            try {
-                // I guess this returns something, but I'll get a warning if I try to save it to a
-                // variable. Maybe look more into that later.
-                client.putObject(bucket, key, file)
-                client.setObjectAcl(bucket, key, CannedAccessControlList.PublicRead)
-
-                val newImageUrl = getString(R.string.cdn_url) + key
-
-                runOnUiThread {
-                    run {
-                        Toast.makeText(this, "Saved to $newImageUrl", Toast.LENGTH_LONG).show()
-                    }
-                }
-
-                // Right now this is being copied to the clipboard as plain text (and not as a URL)
-                // but I can probably fancy this up a little so the phone recognizes it as a URL
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip: ClipData = ClipData.newPlainText("a url", newImageUrl)
-                clipboard.setPrimaryClip(clip)
-            }
-            catch (e: AmazonClientException) {
-                debug("client exception: $e")
-            }
-            catch (e: AmazonServiceException) {
-                debug("service exception: $e")
-            }
-            catch (e: Exception) {
-                debug("some other exception: $e")
-            }
+        catch (e: Exception) {
+            debug("other exception: $e")
         }
+    }
 
+    private fun actuallySaveFile(client: AmazonS3Client, bucket: String, key: String, file: File) {
+        try {
+            // I guess this returns something, but I'll get a warning if I try to save it to a
+            // variable. Maybe look more into that later.
+            client.putObject(bucket, key, file)
+            client.setObjectAcl(bucket, key, CannedAccessControlList.PublicRead)
+
+            val newImageUrl = getString(R.string.cdn_url) + key
+
+            show("Saved to $newImageUrl")
+
+            // Right now this is being copied to the clipboard as plain text (and not as a URL)
+            // but I can probably fancy this up a little so the phone recognizes it as a URL
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip: ClipData = ClipData.newPlainText("a url", newImageUrl)
+            clipboard.setPrimaryClip(clip)
+        } catch (e: AmazonClientException) {
+            debug("client exception: $e")
+        } catch (e: AmazonServiceException) {
+            debug("service exception: $e")
+        } catch (e: Exception) {
+            debug("some other exception: $e")
+        }
     }
 
     /*
