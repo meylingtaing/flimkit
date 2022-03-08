@@ -263,7 +263,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Check for something in the text input
-        val input = binding.filenameInputText.text.toString()
+        val input = binding.filenameInputText.text.toString().trim()
         if (input == "") {
             show("No filename given")
             return ""
