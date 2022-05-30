@@ -5,7 +5,9 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.*
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.media.ExifInterface
+import android.media.ExifInterface.ORIENTATION_ROTATE_90
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -114,6 +116,7 @@ class MainActivity : AppCompatActivity() {
                     photoUri = data?.data ?: return
 
                     val bitmap: Bitmap = MediaStore.Images.Media.getBitmap(contentResolver, photoUri)
+                    var rotated = false
 
                     contentResolver.openInputStream(photoUri!!).use {
                         stream ->
@@ -126,15 +129,37 @@ class MainActivity : AppCompatActivity() {
                                     day = date.substring(8, 10)
                                     binding.imageDate.text = getString(R.string.image_taken_date, year, month, day)
                                 }
+
+                                val orientation = exif.getAttribute(ExifInterface.TAG_ORIENTATION)?.toInt()
+                                if (orientation == ORIENTATION_ROTATE_90) { rotated = true }
                             }
                     }
 
-                    // Create a smaller version of the picture?
+                    // Create a smaller version of the picture
                     val desiredWidth = 1024
                     val desiredHeight:Int = (bitmap.height * (desiredWidth.toDouble() / bitmap.width)).toInt()
-
-                    newBitmap =
+                    val scaledBitmap =
                         Bitmap.createScaledBitmap(bitmap, desiredWidth, desiredHeight, true)
+
+                    // Rotate the photo if necessary
+                    // https://stackoverflow.com/questions/9015372/how-to-rotate-a-bitmap-90-degrees
+                    if (rotated) {
+                        val matrix = Matrix()
+                        matrix.postRotate(90F)
+
+                        newBitmap = Bitmap.createBitmap(
+                            scaledBitmap,
+                            0,
+                            0,
+                            scaledBitmap.width,
+                            scaledBitmap.height,
+                            matrix,
+                            true
+                        )
+                    }
+                    else {
+                        newBitmap = scaledBitmap
+                    }
 
                     renderImage(newBitmap)
                 }
