@@ -7,7 +7,6 @@ import android.content.*
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.media.ExifInterface
-import android.media.ExifInterface.ORIENTATION_ROTATE_90
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -117,6 +116,7 @@ class MainActivity : AppCompatActivity() {
 
                     val bitmap: Bitmap = MediaStore.Images.Media.getBitmap(contentResolver, photoUri)
                     var rotated = false
+                    var orientation = 1
 
                     contentResolver.openInputStream(photoUri!!).use {
                         stream ->
@@ -130,8 +130,10 @@ class MainActivity : AppCompatActivity() {
                                     binding.imageDate.text = getString(R.string.image_taken_date, year, month, day)
                                 }
 
-                                val orientation = exif.getAttribute(ExifInterface.TAG_ORIENTATION)?.toInt()
-                                if (orientation == ORIENTATION_ROTATE_90) { rotated = true }
+                                orientation = exif.getAttribute(ExifInterface.TAG_ORIENTATION)?.toInt()!!
+                                if (orientation != android.media.ExifInterface.ORIENTATION_NORMAL) {
+                                    rotated = true
+                                }
                             }
                     }
 
@@ -144,18 +146,31 @@ class MainActivity : AppCompatActivity() {
                     // Rotate the photo if necessary
                     // https://stackoverflow.com/questions/9015372/how-to-rotate-a-bitmap-90-degrees
                     if (rotated) {
-                        val matrix = Matrix()
-                        matrix.postRotate(90F)
 
-                        newBitmap = Bitmap.createBitmap(
-                            scaledBitmap,
-                            0,
-                            0,
-                            scaledBitmap.width,
-                            scaledBitmap.height,
-                            matrix,
-                            true
+                        // I feel like I should be able to force these key values to always be
+                        // floats, but idk how to do that, so I have that weird "let" statement
+                        // below
+                        val rotationMap = mapOf(
+                            android.media.ExifInterface.ORIENTATION_ROTATE_90 to 90F,
+                            android.media.ExifInterface.ORIENTATION_ROTATE_180 to 180F
                         )
+                        if (rotationMap.containsKey(orientation)) {
+                            val matrix = Matrix()
+                            rotationMap[orientation]?.let { matrix.postRotate(it) }
+
+                            newBitmap = Bitmap.createBitmap(
+                                scaledBitmap,
+                                0,
+                                0,
+                                scaledBitmap.width,
+                                scaledBitmap.height,
+                                matrix,
+                                true
+                            )
+                        }
+                        else {
+                            debug("Need support another orientation: $orientation")
+                        }
                     }
                     else {
                         newBitmap = scaledBitmap
