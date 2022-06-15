@@ -222,6 +222,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /*
+        actuallySaveFile(client, bucket, key, file)
+        Saves the file to the digital ocean space
+    */
     private fun actuallySaveFile(client: AmazonS3Client, bucket: String, key: String, file: File) {
         try {
             // I guess this returns something, but I'll get a warning if I try to save it to a
@@ -261,7 +265,7 @@ class MainActivity : AppCompatActivity() {
         exampleFile.createNewFile()
 
         val outputStream = ByteArrayOutputStream()
-        exampleBitmap!!.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+        exampleBitmap!!.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
         val exampleBitmapData = outputStream.toByteArray()
 
         val fileOutputStream = FileOutputStream(exampleFile)
