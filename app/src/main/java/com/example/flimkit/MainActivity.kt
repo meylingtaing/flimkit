@@ -131,7 +131,9 @@ class MainActivity : AppCompatActivity() {
                                 }
 
                                 orientation = exif.getAttribute(ExifInterface.TAG_ORIENTATION)?.toInt()!!
-                                if (orientation != android.media.ExifInterface.ORIENTATION_NORMAL) {
+                                if (orientation != android.media.ExifInterface.ORIENTATION_NORMAL &&
+                                    orientation != android.media.ExifInterface.ORIENTATION_UNDEFINED)
+                                {
                                     rotated = true
                                 }
                             }
