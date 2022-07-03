@@ -5,7 +5,9 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.*
 import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.graphics.Matrix
+import android.graphics.drawable.AnimatedImageDrawable
 import android.media.ExifInterface
 import android.net.Uri
 import android.os.Build
@@ -39,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     private var year: String? = null
     private var month: String? = null
     private var day: String? = null
+    private var extension = "jpg"
 
     private var newBitmap: Bitmap? = null
 
@@ -114,9 +117,14 @@ class MainActivity : AppCompatActivity() {
                 if (resultCode == Activity.RESULT_OK) {
                     photoUri = data?.data ?: return
 
-                    val bitmap: Bitmap = MediaStore.Images.Media.getBitmap(contentResolver, photoUri)
-                    var rotated = false
-                    var orientation = 1
+                    val source = ImageDecoder.createSource(contentResolver, photoUri!!)
+                    val drawable = ImageDecoder.decodeDrawable(source)
+
+                    if (drawable is AnimatedImageDrawable) {
+                        extension = "gif"
+                    }
+
+                    val bitmap: Bitmap = ImageDecoder.decodeBitmap(source)
 
                     contentResolver.openInputStream(photoUri!!).use {
                         stream ->
@@ -129,54 +137,14 @@ class MainActivity : AppCompatActivity() {
                                     day = date.substring(8, 10)
                                     binding.imageDate.text = getString(R.string.image_taken_date, year, month, day)
                                 }
-
-                                orientation = exif.getAttribute(ExifInterface.TAG_ORIENTATION)?.toInt()!!
-                                if (orientation != android.media.ExifInterface.ORIENTATION_NORMAL &&
-                                    orientation != android.media.ExifInterface.ORIENTATION_UNDEFINED)
-                                {
-                                    rotated = true
-                                }
                             }
                     }
 
                     // Create a smaller version of the picture
                     val desiredWidth = 1024
                     val desiredHeight:Int = (bitmap.height * (desiredWidth.toDouble() / bitmap.width)).toInt()
-                    val scaledBitmap =
+                    newBitmap =
                         Bitmap.createScaledBitmap(bitmap, desiredWidth, desiredHeight, true)
-
-                    // Rotate the photo if necessary
-                    // https://stackoverflow.com/questions/9015372/how-to-rotate-a-bitmap-90-degrees
-                    if (rotated) {
-
-                        // I feel like I should be able to force these key values to always be
-                        // floats, but idk how to do that, so I have that weird "let" statement
-                        // below
-                        val rotationMap = mapOf(
-                            android.media.ExifInterface.ORIENTATION_ROTATE_90 to 90F,
-                            android.media.ExifInterface.ORIENTATION_ROTATE_180 to 180F
-                        )
-                        if (rotationMap.containsKey(orientation)) {
-                            val matrix = Matrix()
-                            rotationMap[orientation]?.let { matrix.postRotate(it) }
-
-                            newBitmap = Bitmap.createBitmap(
-                                scaledBitmap,
-                                0,
-                                0,
-                                scaledBitmap.width,
-                                scaledBitmap.height,
-                                matrix,
-                                true
-                            )
-                        }
-                        else {
-                            debug("Need support another orientation: $orientation")
-                        }
-                    }
-                    else {
-                        newBitmap = scaledBitmap
-                    }
 
                     renderImage(newBitmap)
                 }
@@ -202,7 +170,7 @@ class MainActivity : AppCompatActivity() {
 
         val bucket = getString(R.string.bucket)
         val file = convertResourceToFile()
-        val key = "food/${year}/${month}/${year}-${month}-${day}_${input}.jpg"
+        val key = "food/${year}/${month}/${year}-${month}-${day}_${input}.$extension"
 
         // Before saving the file, we need to check and see if it already exists, and if it does,
         // then we should prompt to user to make sure overwriting it is okay
@@ -276,19 +244,30 @@ class MainActivity : AppCompatActivity() {
         https://github.com/br3nt0n/Digital-Ocean-Spaces-Android-Example/blob/master/app/src/main/java/thecloudhub/com/digitaloceanspacesexample/SpacesFileRepository.kt
      */
     private fun convertResourceToFile(): File {
-        val exampleBitmap = newBitmap
-
         val exampleFile = File(this.filesDir, "tempfile.jpg")
         exampleFile.createNewFile()
 
-        val outputStream = ByteArrayOutputStream()
-        exampleBitmap!!.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
-        val exampleBitmapData = outputStream.toByteArray()
-
         val fileOutputStream = FileOutputStream(exampleFile)
-        fileOutputStream.write(exampleBitmapData)
-        fileOutputStream.flush()
-        fileOutputStream.close()
+
+        if (extension == "gif") {
+            val inputStream = contentResolver.openInputStream(photoUri!!)
+            inputStream.use { input ->
+                fileOutputStream.use { output ->
+                    input!!.copyTo(output)
+                }
+            }
+        }
+        else {
+            val exampleBitmap = newBitmap
+
+            val outputStream = ByteArrayOutputStream()
+            exampleBitmap!!.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
+            val exampleBitmapData = outputStream.toByteArray()
+
+            fileOutputStream.write(exampleBitmapData)
+            fileOutputStream.flush()
+            fileOutputStream.close()
+        }
 
         return exampleFile
     }
@@ -325,7 +304,7 @@ class MainActivity : AppCompatActivity() {
 
     /*
         saveImage()
-        Copies the selected image to a new file on the phone
+        Copies the selected image to a new file on the phone -- NOT ACTUALLY USED
      */
     private fun saveImage() {
 
@@ -349,7 +328,7 @@ class MainActivity : AppCompatActivity() {
 
     /*
         saveImageToStream()
-        A helper for saveImage
+        A helper for saveImage -- NOT ACTUALLY USED
      */
     private fun saveImageToStream(bitmap: Bitmap, outputStream: OutputStream?) {
         if (outputStream != null) {
@@ -381,7 +360,7 @@ class MainActivity : AppCompatActivity() {
     /*
         debug(message)
         Logs the given message under the "flailing" tag
-     */
+    */
     private fun debug(message: String) {
         Log.d("flailing", message)
     }
