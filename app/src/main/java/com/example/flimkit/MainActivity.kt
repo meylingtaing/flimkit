@@ -6,17 +6,14 @@ import android.app.DatePickerDialog
 import android.content.*
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
-import android.graphics.Matrix
 import android.graphics.drawable.AnimatedImageDrawable
-import android.media.ExifInterface
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.exifinterface.media.ExifInterface
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.auth.BasicAWSCredentials
@@ -109,7 +106,6 @@ class MainActivity : AppCompatActivity() {
         onActivityResult
         Handles what happens after the user selects an image
      */
-    @RequiresApi(Build.VERSION_CODES.N)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
@@ -347,7 +343,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun chooseDate() {
         val datePicker = DatePickerDialog(this)
-        datePicker.setOnDateSetListener { view, datePickedYear, datePickedMonth, datePickedDay ->
+        datePicker.setOnDateSetListener { _, datePickedYear, datePickedMonth, datePickedDay ->
             year  = String.format("%d", datePickedYear)
             month = String.format("%02d", datePickedMonth+1) // What the heck, this is 0 based?!
             day   = String.format("%02d", datePickedDay)
