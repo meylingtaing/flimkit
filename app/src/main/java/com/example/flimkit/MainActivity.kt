@@ -35,6 +35,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     private var photoUri: Uri? = null
+
+    private var folder: String = "food"
     private var year: String? = null
     private var month: String? = null
     private var day: String? = null
@@ -166,7 +168,7 @@ class MainActivity : AppCompatActivity() {
 
         val bucket = getString(R.string.bucket)
         val file = convertResourceToFile()
-        val key = "food/${year}/${month}/${year}-${month}-${day}_${input}.$extension"
+        val key = "${folder}/${year}/${month}/${year}-${month}-${day}_${input}.$extension"
 
         // Before saving the file, we need to check and see if it already exists, and if it does,
         // then we should prompt to user to make sure overwriting it is okay
@@ -288,6 +290,9 @@ class MainActivity : AppCompatActivity() {
             show("No filename given")
             return ""
         }
+
+        // Set the folder
+        folder = binding.imageFolderInputText.text.toString().trim()
 
         // Make sure we have a date
         if (year == null || month == null || day == null) {
